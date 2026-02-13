@@ -33,7 +33,7 @@ const MainPage: React.FC<MainPageProps> = ({
   const [useRag, setUseRag] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { response, setResponse, isStreaming, setIsStreaming, hasStarted, setHasStarted, error, responseEndRef, handleSubmit, handleReset } = useStreaming(addToHistory);
+  const { response, setResponse, isStreaming, setIsStreaming, hasStarted, setHasStarted, error, sources, setSources, responseEndRef, handleSubmit, handleReset } = useStreaming(addToHistory);
 
   const handleClearInputs = () => {
     setInstruction('');
@@ -54,6 +54,8 @@ const MainPage: React.FC<MainPageProps> = ({
     setFile(null);
     setModel(item.model);
     setResponse(item.response);
+    setSources(item.sources || []);
+    setUseRag(item.useRag || false);
     setHasStarted(true);
     setIsStreaming(false);
     setIsHistoryOpen(false);
@@ -101,6 +103,7 @@ const MainPage: React.FC<MainPageProps> = ({
             responseEndRef={responseEndRef}
             contentRef={contentRef}
             onReset={handleReset}
+            sources={sources}
           />
         )}
       </div>

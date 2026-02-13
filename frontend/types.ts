@@ -34,4 +34,11 @@ export interface HistoryItem {
   fileName?: string;
   model: ModelType;
   response: string;
+  sources?: GroundingSource[];
+  useRag?: boolean;
+}
+
+export interface GroundingSource {
+  title: string;
+  uri: string;
 }

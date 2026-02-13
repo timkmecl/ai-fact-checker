@@ -1,5 +1,5 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { ModelType, AnalysisRequest, InputMode } from '../types';
+import { ModelType, AnalysisRequest, InputMode, GroundingSource } from '../types';
 import { ZPPKZ_LAW_TEXT, ZPPKZ_INFO_TEXT } from '../constants/lawText';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -42,7 +42,8 @@ const fetchUrlContent = async (url: string): Promise<string> => {
 
 export const streamAnalysis = async (
   request: AnalysisRequest,
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  onMetadata?: (sources: GroundingSource[]) => void
 ): Promise<void> => {
   const { instruction, inputMode, textContent, url, file, model, useRag } = request;
 
@@ -53,7 +54,7 @@ export const streamAnalysis = async (
   systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
   
   if (useRag) {
-    systemContext += "Uporabi tudi širše iskanje po bazi znanja prek File Search API orodja, za več informacij, ki bi pomagale pri odgovoru. Ni pa nujno, da so vrnjene informacije relevantne."
+    systemContext += "Uporabi tudi širše iskanje po bazi znanja prek File Search API orodja, za več informacij, ki bi pomagale pri odgovoru. Vrnjene informacije niso vedno relevantne, uporabi smo, če so."
   }
 
 
@@ -83,13 +84,30 @@ export const streamAnalysis = async (
       contents: { parts: contents },
       config: {
         temperature: 0.5,
-        thinkingConfig: model === ModelType.GEMINI_3_FLASH ? { thinkingLevel: ThinkingLevel.LOW } : { thinkingBudget: 4096 }
+        thinkingConfig: model === ModelType.GEMINI_3_FLASH ? { thinkingLevel: ThinkingLevel.LOW } : { thinkingBudget: 4096 },
+        ...(useRag && {
+          tools: [{ googleSearch: {} }]
+        })
       }
     });
 
     for await (const chunk of responseStream) {
       if (chunk.text) {
         onChunk(chunk.text);
+      }
+
+      // Extract grounding metadata if present in chunk
+      const metadata = chunk.candidates?.[0]?.groundingMetadata;
+      if (metadata?.groundingChunks && onMetadata) {
+        const sources: GroundingSource[] = metadata.groundingChunks
+          .filter((c: any) => c.web)
+          .map((c: any) => ({
+            title: c.web.title || 'Vir',
+            uri: c.web.uri
+          }));
+        if (sources.length > 0) {
+          onMetadata(sources);
+        }
       }
     }
   } catch (error) {
