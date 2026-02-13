@@ -80,7 +80,7 @@ const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
       {!isStreaming && (
          <div className="mt-8 text-center animate-fade-in">
            <p className="text-xs text-gray-400 font-light">
-             AI Fact Checker — AI lahko dela napake, vedno preveri odgovor.
+             AI Fact Checker — AI lahko dela napake, vedno preverite odgovor.
            </p>
          </div>
       )}

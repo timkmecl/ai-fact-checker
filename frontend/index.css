@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Project custom styles (migrated from inline <style> in index.html) */
+:root {
+  --bg: #F3F0E7;
+  --text: #2D2D2D;
+  --accent: #BC5A41;
+}
+
+/* Ensure base styles are applied after Tailwind */
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: 'Instrument Serif', serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D1D1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A0A0A0;
+}
+
+.card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}

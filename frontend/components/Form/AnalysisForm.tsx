@@ -16,8 +16,8 @@ interface AnalysisFormProps {
   setFile: (file: File | null) => void;
   model: ModelType;
   setModel: (model: ModelType) => void;
-  includeLaw: boolean;
-  setIncludeLaw: (value: boolean) => void;
+  useRag: boolean;
+  setUseRag: (value: boolean) => void;
   onClearInputs: () => void;
   onSubmit: () => void;
 }
@@ -35,13 +35,13 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
   setFile,
   model,
   setModel,
-  includeLaw,
-  setIncludeLaw,
+  useRag,
+  setUseRag,
   onClearInputs,
   onSubmit,
 }) => {
   return (
-    <div className="bg-white border border-[#D1D1D1] rounded-3xl p-6 md:p-10 card-shadow">
+    <div className="bg-white border border-[#D1D1D1] rounded-3xl p-6 md:p-10 mb-6 card-shadow">
       
       <div className="mb-8">
         <div className="flex justify-between items-center mb-3">
@@ -69,8 +69,8 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
               <input 
                 type="checkbox" 
                 className="sr-only peer" 
-                checked={includeLaw}
-                onChange={(e) => setIncludeLaw(e.target.checked)}
+                checked={useRag}
+                onChange={(e) => setUseRag(e.target.checked)}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#BC5A41]"></div>
               <span className="ml-3 text-sm font-medium text-gray-600 group-hover:text-[#2D2D2D] transition-colors">Širše iskanje po bazi znanja</span>

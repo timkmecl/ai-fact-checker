@@ -16,7 +16,7 @@ export interface AnalysisRequest {
   url?: string;
   file?: File;
   model: ModelType;
-  includeLaw?: boolean;
+  useRag?: boolean;
 }
 
 export interface ChatMessage {

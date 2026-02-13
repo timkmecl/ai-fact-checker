@@ -30,7 +30,7 @@ const MainPage: React.FC<MainPageProps> = ({
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [model, setModel] = useState<ModelType>(ModelType.FLASH_LITE);
-  const [includeLaw, setIncludeLaw] = useState(false);
+  const [useRag, setUseRag] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { response, setResponse, isStreaming, setIsStreaming, hasStarted, setHasStarted, error, responseEndRef, handleSubmit, handleReset } = useStreaming(addToHistory);
@@ -43,7 +43,7 @@ const MainPage: React.FC<MainPageProps> = ({
   };
 
   const onSubmit = () => {
-    handleSubmit(instruction, inputMode, textContent, url, file, model, includeLaw);
+    handleSubmit(instruction, inputMode, textContent, url, file, model, useRag);
   };
 
   const handleSelectHistoryItem = (item: HistoryItem) => {
@@ -88,8 +88,8 @@ const MainPage: React.FC<MainPageProps> = ({
             setFile={setFile}
             model={model}
             setModel={setModel}
-            includeLaw={includeLaw}
-            setIncludeLaw={setIncludeLaw}
+            useRag={useRag}
+            setUseRag={setUseRag}
             onClearInputs={handleClearInputs}
             onSubmit={onSubmit}
           />

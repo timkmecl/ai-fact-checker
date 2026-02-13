@@ -44,15 +44,16 @@ export const streamAnalysis = async (
   request: AnalysisRequest,
   onChunk: (text: string) => void
 ): Promise<void> => {
-  const { instruction, inputMode, textContent, url, file, model, includeLaw } = request;
+  const { instruction, inputMode, textContent, url, file, model, useRag } = request;
 
   let contents: any = [];
   
   let systemContext = "Si AI Fact Checker. Tvoj cilj je na osnovi podanega gradiva za analizo (besedilo, datoteke) in uporabnikovega navodila ter morebitnega dodatnega gradiva pomagati uporabniku pri zadani nalogi (ki je lahko širša kot zgolj fact-checking). V odgovoru uporabi markdown oblikovanje, smiselno uporabljaj naslove (#), podnaslove (##) (po potrebi podpodnaslove...) in bodi jedrnat, a vseeno dovolj informativen - razen če uporabnik zahteva drugače. Ne izpisuj markdown tabel - BREZ TABEL. V tvojem odgovoru naj bo, kar zahteva uporabnik, pri čemer naj bo kakovost odgovora taka, da bo z minimalno recenzijo primeren za objavo.\n\n";
   systemContext += `Nekaj informacij o evtanaziji in zakonu: \n\n${ZPPKZ_INFO_TEXT}\n\n`
-
-  if (includeLaw) {
-    systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
+  systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
+  
+  if (useRag) {
+    systemContext += "Uporabi tudi širše iskanje po bazi znanja prek File Search API orodja, za več informacij, ki bi pomagale pri odgovoru. Ni pa nujno, da so vrnjene informacije relevantne."
   }
 
 

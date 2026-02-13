@@ -22,7 +22,7 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
     url: string,
     file: File | null,
     model: ModelType,
-    includeLaw: boolean
+    useRag: boolean
   ) => {
     if (!instruction) return;
     if (inputMode === InputMode.TEXT && !textContent) return;
@@ -38,7 +38,7 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
     try {
       await streamAnalysis({
         instruction, inputMode, textContent, url, 
-        file: file || undefined, model, includeLaw
+        file: file || undefined, model, useRag
       }, (chunk) => {
         fullResponse += chunk;
         setResponse((prev) => prev + chunk);
