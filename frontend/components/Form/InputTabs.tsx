@@ -1,5 +1,5 @@
 import React from 'react';
-import { InputMode } from '../types';
+import { InputMode } from '../../types';
 
 interface InputTabsProps {
   currentMode: InputMode;
