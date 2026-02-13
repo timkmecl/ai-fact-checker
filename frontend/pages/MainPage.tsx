@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ModelType, InputMode, HistoryItem } from '../types';
+import { ModelType, InputMode, ContentInput, HistoryItem } from '../types';
 import Header from '../components/Header/Header';
 import AnalysisForm from '../components/Form/AnalysisForm';
 import ResponseDisplay from '../components/Response/ResponseDisplay';
@@ -25,10 +25,7 @@ const MainPage: React.FC<MainPageProps> = ({
 }) => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [instruction, setInstruction] = useState('');
-  const [inputMode, setInputMode] = useState<InputMode>(InputMode.TEXT);
-  const [textContent, setTextContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [contents, setContents] = useState<ContentInput[]>([{ type: InputMode.TEXT, content: '' }]);
   const [model, setModel] = useState<ModelType>(ModelType.FLASH_LITE);
   const [useRag, setUseRag] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -37,21 +34,23 @@ const MainPage: React.FC<MainPageProps> = ({
 
   const handleClearInputs = () => {
     setInstruction('');
-    setTextContent('');
-    setUrl('');
-    setFile(null);
+    setContents([{ type: InputMode.TEXT, content: '' }]);
   };
 
   const onSubmit = () => {
-    handleSubmit(instruction, inputMode, textContent, url, file, model, useRag);
+    handleSubmit(instruction, contents, model, useRag);
   };
 
   const handleSelectHistoryItem = (item: HistoryItem) => {
     setInstruction(item.instruction);
-    setInputMode(item.inputMode);
-    if (item.textContent) setTextContent(item.textContent);
-    if (item.url) setUrl(item.url);
-    setFile(null);
+    // if item.contents.type is FILE, set content to empty string to avoid issues with file inputs
+    const parsedContents = item.contents.map(c => {
+      if (c.type === InputMode.FILE) {
+        return { type: InputMode.FILE, content: '' };
+      }
+      return c;
+    });
+    setContents(parsedContents);
     setModel(item.model);
     setResponse(item.response);
     setSources(item.sources || []);
@@ -80,14 +79,8 @@ const MainPage: React.FC<MainPageProps> = ({
           <AnalysisForm
             instruction={instruction}
             setInstruction={setInstruction}
-            inputMode={inputMode}
-            setInputMode={setInputMode}
-            textContent={textContent}
-            setTextContent={setTextContent}
-            url={url}
-            setUrl={setUrl}
-            file={file}
-            setFile={setFile}
+            contents={contents}
+            setContents={setContents}
             model={model}
             setModel={setModel}
             useRag={useRag}

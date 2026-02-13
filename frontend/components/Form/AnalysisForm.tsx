@@ -1,19 +1,13 @@
 import React from 'react';
-import { ModelType, InputMode } from '../../types';
+import { ModelType, InputMode, ContentInput } from '../../types';
 import InputTabs from './InputTabs';
 import { TrashIcon } from '../../utils/icons';
 
 interface AnalysisFormProps {
   instruction: string;
   setInstruction: (value: string) => void;
-  inputMode: InputMode;
-  setInputMode: (mode: InputMode) => void;
-  textContent: string;
-  setTextContent: (value: string) => void;
-  url: string;
-  setUrl: (value: string) => void;
-  file: File | null;
-  setFile: (file: File | null) => void;
+  contents: ContentInput[];
+  setContents: (contents: ContentInput[]) => void;
   model: ModelType;
   setModel: (model: ModelType) => void;
   useRag: boolean;
@@ -25,14 +19,8 @@ interface AnalysisFormProps {
 const AnalysisForm: React.FC<AnalysisFormProps> = ({
   instruction,
   setInstruction,
-  inputMode,
-  setInputMode,
-  textContent,
-  setTextContent,
-  url,
-  setUrl,
-  file,
-  setFile,
+  contents,
+  setContents,
   model,
   setModel,
   useRag,
@@ -40,13 +28,18 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
   onClearInputs,
   onSubmit,
 }) => {
+  // For now, work with the first content item
+  const content = contents[0] || { type: InputMode.TEXT, content: '' };
+  const setContent = (newContent: ContentInput) => {
+    setContents([newContent]);
+  };
   return (
     <div className="bg-white border border-[#D1D1D1] rounded-3xl p-6 md:p-10 mb-6 card-shadow">
       
       <div className="mb-8">
         <div className="flex justify-between items-center mb-3">
           <label className="text-xl font-serif text-[#2D2D2D]">Navodilo</label>
-          {(instruction || textContent || url || file) && (
+          {(instruction || contents.some(c => c.content)) && (
             <button 
               onClick={onClearInputs}
               className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
@@ -80,39 +73,39 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
 
       <div className="mb-4">
          <label className="block text-xl font-serif mb-4 text-[#2D2D2D]">Vsebina</label>
-         <InputTabs currentMode={inputMode} onChange={setInputMode} />
+         <InputTabs currentMode={content.type} onChange={(type) => setContent({ ...content, type, content: '' })} />
       </div>
 
       <div className="mb-10">
-        {inputMode === InputMode.TEXT && (
+         {content.type === InputMode.TEXT && (
           <textarea
             className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] min-h-[220px] text-base font-light leading-relaxed transition-all placeholder:text-gray-300"
             placeholder="Prilepite besedilo članka ali posamezne trditve tukaj..."
             lang="sl-SI"
             spellCheck={false}
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
+            value={content.content as string}
+            onChange={(e) => setContent({ ...content, content: e.target.value })}
           />
         )}
 
-        {inputMode === InputMode.URL && (
+        {content.type === InputMode.URL && (
           <div className="animate-fade-in">
              <input
               type="url"
               className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] text-lg transition-all"
               placeholder="https://..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              value={content.content as string}
+              onChange={(e) => setContent({ ...content, content: e.target.value })}
             />
             <p className="mt-3 text-xs text-gray-400 px-2 italic">Model bo analiziral vsebino na tej povezavi.</p>
           </div>
         )}
 
-        {inputMode === InputMode.FILE && (
+        {content.type === InputMode.FILE && (
           <div className="border-2 border-dashed border-[#D1D1D1] rounded-2xl p-12 text-center bg-[#FAFAFA] hover:bg-[#F3F0E7] hover:border-[#BC5A41] transition-all relative group overflow-hidden">
              <input 
                 type="file" 
-                onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+                onChange={(e) => setContent({ ...content, content: e.target.files ? e.target.files[0] : null })}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 accept=".txt,.md,.html,.pdf,image/*"
              />
@@ -120,8 +113,8 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
                 <div className="mb-4 flex justify-center">
                    <svg xmlns="http://www.w3.org/2000/svg" className="text-gray-300 group-hover:text-[#BC5A41] transition-colors" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 </div>
-                <p className="text-gray-500 font-medium mb-1">{file ? file.name : "Povlecite datoteko sem"}</p>
-                <p className="text-xs text-gray-400">{file ? "Datoteka pripravljena" : "PDF, slika, TXT"}</p>
+                <p className="text-gray-500 font-medium mb-1">{content.content ? (content.content as File).name : "Povlecite datoteko sem"}</p>
+                <p className="text-xs text-gray-400">{content.content ? "Datoteka pripravljena" : "PDF, slika, TXT"}</p>
              </div>
           </div>
         )}
@@ -152,7 +145,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
 
          <button
             onClick={onSubmit}
-            disabled={!instruction || (inputMode === InputMode.TEXT && !textContent) || (inputMode === InputMode.URL && !url) || (inputMode === InputMode.FILE && !file)}
+             disabled={!instruction || (content.type === InputMode.TEXT && !content.content) || (content.type === InputMode.URL && !content.content) || (content.type === InputMode.FILE && !content.content)}
             className="w-full sm:w-auto bg-[#BC5A41] hover:bg-[#A04832] disabled:bg-[#D1D1D1] disabled:text-gray-400 text-white font-semibold py-4 px-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-3 disabled:transform-none"
          >
            <span>Analiziraj</span>

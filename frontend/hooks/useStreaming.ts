@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { streamAnalysis } from '../services/geminiService';
-import { ModelType, InputMode, HistoryItem, GroundingSource } from '../types';
+import { ModelType, InputMode, ContentInput, HistoryItem, GroundingSource } from '../types';
 
 export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
   const [response, setResponse] = useState('');
@@ -19,17 +19,20 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
 
   const handleSubmit = async (
     instruction: string,
-    inputMode: InputMode,
-    textContent: string,
-    url: string,
-    file: File | null,
+    contents: ContentInput[],
     model: ModelType,
     useRag: boolean
   ) => {
     if (!instruction) return;
-    if (inputMode === InputMode.TEXT && !textContent) return;
-    if (inputMode === InputMode.URL && !url) return;
-    if (inputMode === InputMode.FILE && !file) return;
+    if (contents.length === 0) return;
+    // Validate that at least one content has data
+    const hasValidContent = contents.some(c => {
+      if (c.type === InputMode.TEXT && c.content) return true;
+      if (c.type === InputMode.URL && c.content) return true;
+      if (c.type === InputMode.FILE && c.content) return true;
+      return false;
+    });
+    if (!hasValidContent) return;
 
     setIsStreaming(true);
     setHasStarted(true);
@@ -41,8 +44,7 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
     let fullResponse = "";
     try {
       await streamAnalysis({
-        instruction, inputMode, textContent, url,
-        file: file || undefined, model, useRag
+        instruction, contents, model, useRag
       }, (chunk) => {
         fullResponse += chunk;
         setResponse((prev) => prev + chunk);
@@ -54,11 +56,13 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
       const newItem: HistoryItem = {
         id: Date.now().toString(),
         timestamp: Date.now(),
-        instruction, inputMode,
-        textContent: inputMode === InputMode.TEXT ? textContent : undefined,
-        url: inputMode === InputMode.URL ? url : undefined,
-        fileName: file?.name,
-        model, response: fullResponse,
+        instruction,
+        contents,
+        fileNames: contents
+          .filter(c => c.type === InputMode.FILE && c.content instanceof File)
+          .map(c => (c.content as File).name),
+        model,
+        response: fullResponse,
         sources: sourcesRef.current.length > 0 ? sourcesRef.current : undefined,
         useRag
       };

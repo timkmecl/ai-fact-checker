@@ -1,6 +1,4 @@
-export const ZPPKZ_INFO_TEXT = `# Splošne informacije
-### SKLOP ODPRAVLJANJE STRAHU
-
+export const ZPPKZ_INFO_TEXT = `
 Zakon je dober in varen. Zlorabe v skladu z zakonom so samo v domišljiji nasprotnikov zakona. Zakon ne povečuje zlorab – povečuje preglednost. Zlorabe se dogajajo tam, kjer je smrt tabu in se odločitve sprejemajo v tišini, ne pa tam, kjer je pot do končanja življenja zakonsko jasno urejena, dokumentirana in nadzorovana.
 
 Zakon ne posega v življenje nikogar, ki si te pomoči ne želi.. Opazili ga bodo samo tisti, ki si bodo želeli pomoči, drugim življenja v ničemer ne spremeni. Ni nobenega upravičenega razloga, da bi se moral kdorkoli zakona bati.
@@ -53,7 +51,7 @@ Tisti, ki govorijo o »kulturi smrti«, branijo sistem "kulture trpljenja", v ka
 Kakršnekoli spremembe zakona v bodočnosti bodo lahko predmet zakonodajnega referenduma. Poljubne spremembe zato niso mogoče in se jih ne da napovedovati.
 
 
-### SKLOP ZAKAJ JE ZAKON DOBER
+
 
 Zakon daje pravico do izbire brez vsiljevanja. Vsakomur omogoča, da živi v skladu s svojimi načeli, verovanji in željami.
 
@@ -68,7 +66,7 @@ Zakon vse razbremeni strahu o tem, kakšen bo konec njihovega življenja. Zaveda
 Zakon varuje osebno dostojanstvo in krepi družbeno pravičnost. Pravica, da vsakdo sam odloča o svojem življenju, je zagotovljena vsem ne glede na socialni položaj. 
 
 
-### SKLOP RAZNO
+
 
 Oddani glas ZA pomeni, da ne dovolimo, da o nas odloča duhovščina in njihovi služabniki, da ne odločajo paternalistični zdravniki, ki jih skrbi samopodoba in krnitev njihove avtonomije, ter se ne menijo za avtonomijo pacientov.
 

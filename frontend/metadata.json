@@ -1,5 +1,0 @@
-{
-  "name": "AI Fact Checker",
-  "description": "Napredno preverjanje dejstev s pomočjo modelov Gemini.",
-  "requestFramePermissions": []
-}

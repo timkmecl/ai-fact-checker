@@ -45,43 +45,74 @@ export const streamAnalysis = async (
   onChunk: (text: string) => void,
   onMetadata?: (sources: GroundingSource[]) => void
 ): Promise<void> => {
-  const { instruction, inputMode, textContent, url, file, model, useRag } = request;
+  const { instruction, contents: contentInputs, model, useRag } = request;
 
-  let contents: any = [];
-  
+  let parts: any = [];
+
   let systemContext = "Si AI Fact Checker. Tvoj cilj je na osnovi podanega gradiva za analizo (besedilo, datoteke) in uporabnikovega navodila ter morebitnega dodatnega gradiva pomagati uporabniku pri zadani nalogi (ki je lahko širša kot zgolj fact-checking). V odgovoru uporabi markdown oblikovanje, smiselno uporabljaj naslove (#), podnaslove (##) (po potrebi podpodnaslove...) in bodi jedrnat, a vseeno dovolj informativen - razen če uporabnik zahteva drugače. Ne izpisuj markdown tabel - BREZ TABEL. V tvojem odgovoru naj bo, kar zahteva uporabnik, pri čemer naj bo kakovost odgovora taka, da bo z minimalno recenzijo primeren za objavo.\n\n";
-  systemContext += `Nekaj informacij o evtanaziji in zakonu: \n\n${ZPPKZ_INFO_TEXT}\n\n`
+  systemContext += `Nekaj informacij o evtanaziji in zakonu za pomoč pri pisanju odgovora (this is general information, no need to quote literally, you can paraphrase and use just what you need. And don't cite this explicitly as a source, since this is general facts - when using, don't say "Splošne informacije navajajo XYZ" or "XYZ (Splošne informacije)", but rather just say "XYZ" or optionally cite the relevant part of the law): \n\n${ZPPKZ_INFO_TEXT}\n\n`
   systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
-  
+
   if (useRag) {
-    systemContext += "Uporabi tudi širše iskanje po bazi znanja prek File Search API orodja, za več informacij, ki bi pomagale pri odgovoru. Vrnjene informacije niso vedno relevantne, uporabi smo, če so."
+    systemContext += "Uporabi tudi širše iskanje po bazi znanja (RAG document search - baza različnih člankov, mnenj podpornikov, intervjujev in drugega utemeljevanja) prek File Search API orodja - za več informacij, ki bi pomagale pri odgovoru - predvsem se da tu najti informacije, ki ne sledijo neposredno iz besedila zakona, pa tudi druge. Vrnjene informacije niso vedno relevantne, uporabi samo, če so.\n\n"
   }
 
 
   let promptText = `${systemContext}Navodilo: ${instruction}\n\n`;
 
-  if (inputMode === InputMode.TEXT && textContent) {
-    promptText += `Vsebina za analizo:\n${textContent}`;
-    contents.push({ text: promptText });
-  } else if (inputMode === InputMode.URL && url) {
-    promptText += `Prosim, analiziraj vsebino na tej povezavi: ${url}`;
-    const urlContent = await fetchUrlContent(url);
-    promptText += `\nVsebina spletnega vira:\n${urlContent}`;
-    contents.push({ text: promptText });
-    // console.log(urlContent);
-  } else if (inputMode === InputMode.FILE && file) {
-    promptText += `Prosim, analiziraj priloženo datoteko.`;
-    const filePart = await fileToPart(file);
-    contents.push({ text: promptText });
-    contents.push(filePart);
+  // Process all content inputs
+  if (contentInputs.length === 1) {
+    // Single content - keep original behavior
+    const content = contentInputs[0];
+    if (content.type === InputMode.TEXT && content.content) {
+      promptText += `Vsebina za analizo:\n${content.content}`;
+      parts.push({ text: promptText });
+    } else if (content.type === InputMode.URL && content.content) {
+      promptText += `Prosim, analiziraj vsebino na tej povezavi: ${content.content}`;
+      const urlContent = await fetchUrlContent(content.content as string);
+      promptText += `\nVsebina spletnega vira:\n${urlContent}`;
+      parts.push({ text: promptText });
+    } else if (content.type === InputMode.FILE && content.content) {
+      promptText += `Prosim, analiziraj priloženo datoteko.`;
+      const filePart = await fileToPart(content.content as File);
+      parts.push({ text: promptText });
+      parts.push(filePart);
+    } else {
+      parts.push({ text: promptText });
+    }
   } else {
-    contents.push({ text: promptText });
+    // Multiple contents
+    promptText += `Prosim, analiziraj naslednje vsebine:\n\n`;
+
+    for (let i = 0; i < contentInputs.length; i++) {
+      const content = contentInputs[i];
+      const index = i + 1;
+
+      if (content.type === InputMode.TEXT && content.content) {
+        promptText += `--- Vsebina ${index} (Besedilo) ---\n${content.content}\n\n`;
+      } else if (content.type === InputMode.URL && content.content) {
+        promptText += `--- Vsebina ${index} (URL: ${content.content}) ---\n`;
+        const urlContent = await fetchUrlContent(content.content as string);
+        promptText += `${urlContent}\n\n`;
+      } else if (content.type === InputMode.FILE && content.content) {
+        promptText += `--- Vsebina ${index} (Datoteka: ${(content.content as File).name}) ---\n`;
+        const filePart = await fileToPart(content.content as File);
+        parts.push({ text: promptText });
+        parts.push(filePart);
+        promptText = '\n\n'; // Reset for next content
+      }
+    }
+
+    // Add the accumulated text if there's any content
+    if (parts.length === 0 || promptText.trim()) {
+      parts.push({ text: promptText });
+    }
   }
 
   try {
     const responseStream = await ai.models.generateContentStream({
       model: model,
-      contents: { parts: contents },
+      contents: { parts },
       config: {
         temperature: 0.5,
         thinkingConfig: model === ModelType.GEMINI_3_FLASH ? { thinkingLevel: ThinkingLevel.LOW } : { thinkingBudget: 4096 },

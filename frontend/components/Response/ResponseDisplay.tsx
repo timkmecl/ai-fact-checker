@@ -84,7 +84,7 @@ const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
                <div className="pt-12 border-t border-[#D1D1D1]/40 animate-fade-in-up">
                   <div className="flex items-center gap-3 mb-6">
                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC5A41" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                     <h3 className="text-xl font-serif text-[#2D2D2D]">Viri in reference</h3>
+                     <h3 className="text-xl font-serif text-[#2D2D2D]">Uporabljeni viri (poleg ZPPKŽ)</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {sources.map((src, idx) => (

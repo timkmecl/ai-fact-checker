@@ -73,29 +73,45 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
                       {item.instruction}
                     </h3>
                     
-                    <div className="bg-white/30 p-2 rounded-lg mb-2">
+                     <div className="bg-white/30 p-2 rounded-lg mb-2">
                        <p className="text-[11px] text-gray-500 italic line-clamp-2 leading-relaxed">
-                          {item.inputMode === InputMode.TEXT && (
-                            <span>"{item.textContent?.substring(0, 80)}..."</span>
-                          )}
-                          {item.inputMode === InputMode.URL && (
-                            <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                              {item.url}
-                            </span>
-                          )}
-                          {item.inputMode === InputMode.FILE && (
+                          {item.contents.length === 1 ? (
+                            // Single content - display as before
+                            <>
+                              {item.contents[0].type === InputMode.TEXT && (
+                                <span>"{(item.contents[0].content as string)?.substring(0, 80)}..."</span>
+                              )}
+                              {item.contents[0].type === InputMode.URL && (
+                                <span className="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                  {item.contents[0].content as string}
+                                </span>
+                              )}
+                              {item.contents[0].type === InputMode.FILE && (
+                                <span className="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                  {item.fileNames?.[0]}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            // Multiple contents - show summary
                             <span className="flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                              {item.fileName}
+                              {item.contents.length} vsebin
                             </span>
                           )}
                        </p>
-                    </div>
+                     </div>
 
-                    <div className="flex items-center gap-1 text-[9px] text-gray-400 font-bold uppercase tracking-wider">
-                       <span>{item.inputMode === InputMode.TEXT ? 'Besedilo' : item.inputMode === InputMode.URL ? 'URL' : 'Datoteka'}</span>
-                    </div>
+                     <div className="flex items-center gap-1 text-[9px] text-gray-400 font-bold uppercase tracking-wider">
+                        <span>
+                          {item.contents.length === 1
+                            ? (item.contents[0].type === InputMode.TEXT ? 'Besedilo' : item.contents[0].type === InputMode.URL ? 'URL' : 'Datoteka')
+                            : 'Več virov'
+                          }
+                        </span>
+                     </div>
                   </button>
                   
                   <button 

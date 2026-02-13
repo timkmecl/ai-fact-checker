@@ -9,12 +9,14 @@ export enum InputMode {
   FILE = 'file'
 }
 
+export interface ContentInput {
+  type: InputMode;
+  content: string | File | null;
+}
+
 export interface AnalysisRequest {
   instruction: string;
-  inputMode: InputMode;
-  textContent?: string;
-  url?: string;
-  file?: File;
+  contents: ContentInput[];
   model: ModelType;
   useRag?: boolean;
 }
@@ -28,10 +30,8 @@ export interface HistoryItem {
   id: string;
   timestamp: number;
   instruction: string;
-  inputMode: InputMode;
-  textContent?: string;
-  url?: string;
-  fileName?: string;
+  contents: ContentInput[];
+  fileNames?: string[];
   model: ModelType;
   response: string;
   sources?: GroundingSource[];
