@@ -62,7 +62,6 @@ export const streamAnalysis = async (
 
   // Process all content inputs
   if (contentInputs.length === 1) {
-    // Single content - keep original behavior
     const content = contentInputs[0];
     if (content.type === InputMode.TEXT && content.content) {
       promptText += `Vsebina za analizo:\n${content.content}`;
@@ -84,6 +83,8 @@ export const streamAnalysis = async (
     // Multiple contents
     promptText += `Prosim, analiziraj naslednje vsebine:\n\n`;
 
+    const fileParts: any[] = [];
+
     for (let i = 0; i < contentInputs.length; i++) {
       const content = contentInputs[i];
       const index = i + 1;
@@ -97,17 +98,21 @@ export const streamAnalysis = async (
       } else if (content.type === InputMode.FILE && content.content) {
         promptText += `--- Vsebina ${index} (Datoteka: ${(content.content as File).name}) ---\n`;
         const filePart = await fileToPart(content.content as File);
-        parts.push({ text: promptText });
-        parts.push(filePart);
-        promptText = '\n\n'; // Reset for next content
+        fileParts.push(filePart);
       }
     }
 
-    // Add the accumulated text if there's any content
-    if (parts.length === 0 || promptText.trim()) {
-      parts.push({ text: promptText });
-    }
+    promptText += ` \n\n---\n\nNavodilo: ${instruction}`;
+
+    // Add the accumulated text first
+    parts.push({ text: promptText });
+    // Then add all file parts
+    parts.push(...fileParts);
   }
+
+  console.log("Final prompt parts:", parts);
+  console.log("model:", model);
+  // return;
 
   try {
     const responseStream = await ai.models.generateContentStream({

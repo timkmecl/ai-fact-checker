@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ModelType, InputMode, ContentInput } from '../../types';
 import InputTabs from './InputTabs';
 import { TrashIcon } from '../../utils/icons';
+
+interface InputItem {
+  id: string;
+  type: InputMode;
+  content: string | File | null;
+}
 
 interface AnalysisFormProps {
   instruction: string;
@@ -28,18 +34,67 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
   onClearInputs,
   onSubmit,
 }) => {
-  // For now, work with the first content item
-  const content = contents[0] || { type: InputMode.TEXT, content: '' };
-  const setContent = (newContent: ContentInput) => {
-    setContents([newContent]);
+  // Local state for inputs with IDs
+  const [inputs, setInputs] = useState<InputItem[]>(() => {
+    return contents.map((c, index) => ({
+      id: `input-${index}-${Date.now()}`,
+      type: c.type,
+      content: c.content,
+    }));
+  });
+
+  // Sync inputs to contents when inputs change
+  useEffect(() => {
+    const newContents: ContentInput[] = inputs.map(input => ({
+      type: input.type,
+      content: input.content,
+    }));
+    setContents(newContents);
+  }, [inputs, setContents]);
+
+  // Sync contents to inputs when contents change externally (e.g., history load)
+  useEffect(() => {
+    if (contents.length !== inputs.length) {
+      setInputs(contents.map((c, index) => ({
+        id: `input-${index}-${Date.now()}`,
+        type: c.type,
+        content: c.content,
+      })));
+    }
+  }, [contents]);
+
+  const addInput = () => {
+    setInputs([...inputs, { id: `input-${Date.now()}`, type: InputMode.TEXT, content: '' }]);
   };
+
+  const removeInput = (id: string) => {
+    if (inputs.length > 1) {
+      setInputs(inputs.filter(input => input.id !== id));
+    }
+  };
+
+  const updateInput = (id: string, updates: Partial<InputItem>) => {
+    setInputs(inputs.map(input => 
+      input.id === id ? { ...input, ...updates } : input
+    ));
+  };
+
+  const hasAnyContent = inputs.some(input => input.content);
+
+  const isSubmitDisabled = !instruction || !inputs.some(input => {
+    if (input.type === InputMode.TEXT && input.content) return true;
+    if (input.type === InputMode.URL && input.content) return true;
+    if (input.type === InputMode.FILE && input.content) return true;
+    return false;
+  });
+
   return (
     <div className="bg-white border border-[#D1D1D1] rounded-3xl p-6 md:p-10 mb-6 card-shadow">
       
       <div className="mb-8">
         <div className="flex justify-between items-center mb-3">
           <label className="text-xl font-serif text-[#2D2D2D]">Navodilo</label>
-          {(instruction || contents.some(c => c.content)) && (
+          {(instruction || hasAnyContent) && (
             <button 
               onClick={onClearInputs}
               className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
@@ -71,53 +126,79 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
         </div>
       </div>
 
-      <div className="mb-4">
-         <label className="block text-xl font-serif mb-4 text-[#2D2D2D]">Vsebina</label>
-         <InputTabs currentMode={content.type} onChange={(type) => setContent({ ...content, type, content: '' })} />
-      </div>
-
-      <div className="mb-10">
-         {content.type === InputMode.TEXT && (
-          <textarea
-            className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] min-h-[220px] text-base font-light leading-relaxed transition-all placeholder:text-gray-300"
-            placeholder="Prilepite besedilo članka ali posamezne trditve tukaj..."
-            lang="sl-SI"
-            spellCheck={false}
-            value={content.content as string}
-            onChange={(e) => setContent({ ...content, content: e.target.value })}
-          />
-        )}
-
-        {content.type === InputMode.URL && (
-          <div className="animate-fade-in">
-             <input
-              type="url"
-              className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] text-lg transition-all"
-              placeholder="https://..."
-              value={content.content as string}
-              onChange={(e) => setContent({ ...content, content: e.target.value })}
-            />
-            <p className="mt-3 text-xs text-gray-400 px-2 italic">Model bo analiziral vsebino na tej povezavi.</p>
+      {/* Render Multiple Contents */}
+      {inputs.map((input, index) => (
+        <div key={input.id} className="mt-4 pb-4">
+          <div className="flex justify-between items-center mb-4">
+            <label className="block text-xl font-serif text-[#2D2D2D]">
+              Vsebina{inputs.length > 1 ? ' ' + (index + 1) : ''}
+            </label>
+            {inputs.length > 1 && (
+              <button 
+                onClick={() => removeInput(input.id)}
+                className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-red-50"
+              >
+                <TrashIcon /> Izbriši
+              </button>
+            )}
           </div>
-        )}
+          
+          <InputTabs currentMode={input.type} onChange={(type) => updateInput(input.id, { type, content: '' })} />
 
-        {content.type === InputMode.FILE && (
-          <div className="border-2 border-dashed border-[#D1D1D1] rounded-2xl p-12 text-center bg-[#FAFAFA] hover:bg-[#F3F0E7] hover:border-[#BC5A41] transition-all relative group overflow-hidden">
-             <input 
-                type="file" 
-                onChange={(e) => setContent({ ...content, content: e.target.files ? e.target.files[0] : null })}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                accept=".txt,.md,.html,.pdf,image/*"
-             />
-             <div className="pointer-events-none transition-transform group-hover:scale-105">
-                <div className="mb-4 flex justify-center">
-                   <svg xmlns="http://www.w3.org/2000/svg" className="text-gray-300 group-hover:text-[#BC5A41] transition-colors" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                </div>
-                <p className="text-gray-500 font-medium mb-1">{content.content ? (content.content as File).name : "Povlecite datoteko sem"}</p>
-                <p className="text-xs text-gray-400">{content.content ? "Datoteka pripravljena" : "PDF, slika, TXT"}</p>
-             </div>
+          <div className="mt-4">
+            {input.type === InputMode.TEXT && (
+              <textarea
+                className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] min-h-[180px] text-base font-light leading-relaxed transition-all placeholder:text-gray-300"
+                placeholder="Prilepite besedilo članka ali posamezne trditve tukaj..."
+                lang="sl-SI"
+                spellCheck={false}
+                value={input.content as string}
+                onChange={(e) => updateInput(input.id, { content: e.target.value })}
+              />
+            )}
+
+            {input.type === InputMode.URL && (
+              <div className="animate-fade-in">
+                 <input
+                  type="url"
+                  className="w-full p-5 rounded-2xl border border-[#D1D1D1] focus:ring-2 focus:ring-[#BC5A41]/10 focus:border-[#BC5A41] focus:outline-none bg-[#FAFAFA] text-lg transition-all"
+                  placeholder="https://..."
+                  value={input.content as string}
+                  onChange={(e) => updateInput(input.id, { content: e.target.value })}
+                />
+                <p className="mt-3 mb-3 text-xs text-gray-400 px-2 italic">Model bo analiziral vsebino na tej povezavi.</p>
+              </div>
+            )}
+
+            {input.type === InputMode.FILE && (
+              <div className="border-2 border-dashed border-[#D1D1D1] rounded-2xl p-8 text-center bg-[#FAFAFA] hover:bg-[#F3F0E7] hover:border-[#BC5A41] transition-all relative group overflow-hidden">
+                 <input 
+                    type="file" 
+                    onChange={(e) => updateInput(input.id, { content: e.target.files ? e.target.files[0] : null })}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    accept=".txt,.md,.html,.pdf,image/*"
+                 />
+                 <div className="pointer-events-none transition-transform group-hover:scale-105">
+                    <div className="mb-4 flex justify-center">
+                       <svg xmlns="http://www.w3.org/2000/svg" className="text-gray-300 group-hover:text-[#BC5A41] transition-colors" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <p className="text-gray-500 font-medium mb-1 truncate px-4">{input.content ? (input.content as File).name : "Povlecite datoteko sem"}</p>
+                    <p className="text-xs text-gray-400">{input.content ? "Datoteka pripravljena" : "PDF, slika, TXT"}</p>
+                 </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      ))}
+
+      <div className="mb-4 text-center sm:text-left">
+        <button
+          onClick={addInput}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-[#BC5A41]/30 rounded-xl text-[#BC5A41] hover:bg-[#BC5A41]/5 transition-all text-sm font-medium"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Dodaj vsebino</span>
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-[#D1D1D1]/40 gap-6">
@@ -145,7 +226,7 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
 
          <button
             onClick={onSubmit}
-             disabled={!instruction || (content.type === InputMode.TEXT && !content.content) || (content.type === InputMode.URL && !content.content) || (content.type === InputMode.FILE && !content.content)}
+            disabled={isSubmitDisabled}
             className="w-full sm:w-auto bg-[#BC5A41] hover:bg-[#A04832] disabled:bg-[#D1D1D1] disabled:text-gray-400 text-white font-semibold py-4 px-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-3 disabled:transform-none"
          >
            <span>Analiziraj</span>
