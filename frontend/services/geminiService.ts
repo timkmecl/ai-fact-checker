@@ -1,8 +1,5 @@
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { ModelType, AnalysisRequest, InputMode, GroundingSource } from '../types';
+import { AnalysisRequest, InputMode, GroundingSource } from '../types';
 import { ZPPKZ_LAW_TEXT, ZPPKZ_INFO_TEXT } from '../constants/lawText';
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const fileToPart = async (file: File): Promise<{ inlineData: { data: string; mimeType: string } }> => {
   return new Promise((resolve, reject) => {
@@ -132,39 +129,47 @@ export const streamAnalysis = async (
   // return;
 
   try {
-    const responseStream = await ai.models.generateContentStream({
-      model: model,
-      contents: { parts },
-      config: {
-        temperature: 0.5,
-        thinkingConfig: model === ModelType.GEMINI_3_FLASH ? { thinkingLevel: ThinkingLevel.LOW } : { thinkingBudget: 4096 },
-        ...(useRag && {
-          tools: [{ googleSearch: {} }]
-        })
-      }
+    const response = await fetch(`${process.env.API_URL}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, parts, useRag }),
+      credentials: 'include'
     });
 
-    for await (const chunk of responseStream) {
-      if (chunk.text) {
-        onChunk(chunk.text);
-      }
+    if (!response.ok) throw new Error('Network response was not ok');
 
-      // Extract grounding metadata if present in chunk
-      const metadata = chunk.candidates?.[0]?.groundingMetadata;
-      if (metadata?.groundingChunks && onMetadata) {
-        const sources: GroundingSource[] = metadata.groundingChunks
-          .filter((c: any) => c.web)
-          .map((c: any) => ({
-            title: c.web.title || 'Vir',
-            uri: c.web.uri
-          }));
-        if (sources.length > 0) {
-          onMetadata(sources);
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) return;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            
+            if (data.text) {
+              onChunk(data.text);
+            }
+            
+            if (data.sources && data.sources.length > 0 && onMetadata) {
+              onMetadata(data.sources);
+            }
+          } catch (e) {
+            console.error("Error parsing stream chunk", e);
+          }
         }
       }
     }
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Backend Communication Error:", error);
     throw error;
   }
 };
