@@ -27,16 +27,33 @@ const fileToPart = async (file: File): Promise<{ inlineData: { data: string; mim
 
 // Function that fetches url content and returns it as a string
 const fetchUrlContent = async (url: string): Promise<string> => {
+  // Service 1: urltomarkdown (Heroku)
+  const primaryApi = `https://urltomarkdown.herokuapp.com/?url=${encodeURIComponent(url)}&title=true`;
+  
+  // Service 2: markdown.new (Fallback)
+  const fallbackApi = `https://r.jina.ai/${url}`;
+
   try {
-    const response = await fetch(`https://urltomarkdown.herokuapp.com/?url=${encodeURIComponent(url)}&title=true`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch URL content: ${response.statusText}`);
+    // Attempt 1
+    const response = await fetch(primaryApi);
+    if (!response.ok) throw new Error(`Primary service failed: ${response.status}`);
+    
+    return await response.text();
+  } catch (primaryError) {
+    console.warn("Primary markdown service failed, attempting fallback...", primaryError);
+
+    try {
+      // Attempt 2 (Fallback)
+      const fallbackResponse = await fetch(fallbackApi);
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback service failed: ${fallbackResponse.statusText}`);
+      }
+      
+      return await fallbackResponse.text();
+    } catch (fallbackError) {
+      console.error("Both markdown conversion services failed.");
+      throw fallbackError;
     }
-    const data = await response.text();
-    return data;
-  } catch (error) {
-    console.error("Error fetching URL content from API:", error);
-    throw error;
   }
 };
 

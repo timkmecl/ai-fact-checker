@@ -6,7 +6,7 @@ An AI-powered fact-checking application that helps verify information using Goog
 
 ## Features
 
-- **Multi-input Support**: Analyze text, URLs, and uploaded documents (DOCX, etc.)
+- **Multi-input Support**: Analyze text, URLs, and uploaded documents (PDF, text, etc.)
 - **AI-Powered Analysis**: Uses Google Gemini API for intelligent fact-checking
 - **Real-time Streaming**: Get results as they are generated
 - **History Management**: Save and review previous fact-checks
