@@ -6,9 +6,10 @@ An AI-powered fact-checking application that helps verify information using Goog
 ## Features
 
 - **Multi-input Support**: Analyze text, URLs, and uploaded documents (PDF, text, etc.)
+- **RAG Knowledge Base**: Optional retrieval-augmented generation using 100+ curated documents
 - **AI-Powered Analysis**: Uses Google Gemini API for intelligent fact-checking
 - **Real-time Streaming**: Get results as they are generated
-- **History Management**: Save and review previous fact-checks
+- **History Management**: Save and review previous fact-checks with source citations
 - **Markdown Rendering**: Rich display of analysis results
 - **Authentication**: JWT-based authentication with secure HTTP-only cookies
 - **Local Storage**: History persists in browser storage
@@ -105,9 +106,10 @@ The app will be available at `http://localhost:3000`.
 
 1. **Authentication**: Enter the password to access the application.
 2. **Input Selection**: Choose between Text, URL, or File input tabs. You can add multiple inputs for comprehensive analysis.
-3. **Analysis**: Enter your content and click "Analyze" to start fact-checking.
-4. **Results**: View the AI-generated analysis with sources and explanations. Copy results to clipboard or download as a Word document.
-5. **History**: Access previous analyses from the sidebar.
+3. **RAG Toggle**: Enable "Sirse iskanje po bazi znanja" (Extended knowledge base search) to search 100+ curated documents alongside your analysis.
+4. **Analysis**: Enter your content and click "Analyze" to start fact-checking.
+5. **Results**: View the AI-generated analysis with sources and explanations. When RAG is enabled, retrieved sources from the knowledge base are displayed in a dedicated section.
+6. **History**: Access previous analyses from the sidebar, including saved RAG sources.
 
 ## Project Structure
 
@@ -115,29 +117,29 @@ The app will be available at `http://localhost:3000`.
 ai-fact-checker/
 ├── backend/                 # Express.js backend
 │   ├── src/
-│   │   ├── index.ts        # Main server entry point
+│   │   ├── index.ts        # Main server: auth, Gemini proxy, RAG via File Search
 │   │   └── types.ts        # Shared TypeScript types
 │   ├── .env                # Environment variables (not in git)
 │   ├── package.json
 │   └── tsconfig.json
 ├── frontend/               # React frontend
 │   ├── components/         # React components
-│   │   ├── Form/          # Input forms and tabs
+│   │   ├── AnalysisForm/  # Input forms with RAG toggle
 │   │   ├── Header/        # App header
-│   │   └── Response/      # Result display components
+│   │   └── ResponseDisplay/ # Results with source citations
 │   ├── hooks/             # Custom React hooks
 │   │   ├── useAuth.ts     # Authentication logic
-│   │   ├── useStreaming.ts # Stream handling
+│   │   ├── useStreaming.ts # SSE handling with grounding sources
 │   │   └── useHistory.ts  # History management
 │   ├── pages/             # Main application pages
 │   ├── services/          # API integration
-│   │   └── geminiService.ts # Backend API calls
-│   ├── utils/             # Helper functions and icons
-│   ├── constants/         # Static data and configurations
+│   │   └── geminiService.ts # Backend API calls with RAG support
 │   ├── types.ts           # TypeScript type definitions
 │   ├── .env.local         # Frontend environment variables
 │   └── package.json
-└── rag-setup/            # RAG configuration (future)
+└── rag-setup/             # RAG knowledge base configuration
+    ├── setup.ipynb        # Jupyter notebook for document upload
+    └── sources/           # 100+ curated documents (PDF, DOCX, MD)
 ```
 
 ## API Endpoints
@@ -149,8 +151,9 @@ ai-fact-checker/
 
 ### Analysis
 - `POST /api/analyze` - Stream Gemini analysis (requires authentication)
-  - Request body: `{ model: string, parts: Part[], useRag: boolean }`
-  - Response: Server-sent events (SSE) stream
+  - Request body: `{ model: string, parts: Part[], useRag?: boolean }`
+  - Response: Server-sent events (SSE) stream with optional grounding sources
+  - When `useRag: true`, the File Search tool queries the knowledge base and returns retrieved sources in the response metadata
 
 ## Build Commands
 
@@ -178,6 +181,7 @@ npm run preview  # Preview production build
 | `API_KEY` | Google Gemini API key |
 | `JWT_SECRET` | Secret key for JWT signing |
 | `APP_PASSWORD` | Bcrypt-hashed application password |
+| `FILE_SEARCH_STORE_ID` | Google File Search Store ID for RAG knowledge base |
 | `FRONTEND_URL` | Allowed CORS origin |
 | `PORT` | Server port (default: 4101) |
 | `NODE_ENV` | Environment mode (development/production) |

@@ -35,25 +35,28 @@ npm run preview   # Preview production build
 ai-fact-checker/
 ├── backend/              # Express.js backend
 │   ├── src/
-│   │   ├── index.ts     # Main server: auth routes, Gemini proxy, SSE streaming
+│   │   ├── index.ts     # Main server: auth, Gemini proxy, SSE streaming, File Search RAG
 │   │   └── types.ts     # Shared types (ModelType enum)
-│   ├── .env            # Environment variables (API_KEY, JWT_SECRET, etc.)
+│   ├── .env            # Environment variables (API_KEY, JWT_SECRET, FILE_SEARCH_STORE_ID)
 │   └── package.json
 ├── frontend/            # React frontend
 │   ├── components/      # React components (PascalCase folders)
-│   │   ├── Form/
+│   │   ├── AnalysisForm/  # Input forms with RAG toggle
 │   │   ├── Header/
-│   │   └── Response/
+│   │   └── ResponseDisplay/ # Results with grounding source citations
 │   ├── hooks/          # Custom React hooks
 │   │   ├── useAuth.ts  # JWT auth with cookie-based sessions
-│   │   ├── useStreaming.ts # SSE stream handling
+│   │   ├── useStreaming.ts # SSE handling with grounding sources
 │   │   └── useHistory.ts
 │   ├── pages/          # Page components
 │   ├── services/       # API integration
-│   │   └── geminiService.ts # Backend API calls (not direct Gemini)
+│   │   └── geminiService.ts # Backend API calls with RAG support
 │   ├── constants/      # Static data
 │   ├── utils/          # Helper functions
-│   └── types.ts        # TypeScript types
+│   └── types.ts        # TypeScript types (GroundingSource, AnalysisRequest)
+├── rag-setup/          # RAG knowledge base configuration
+│   ├── setup.ipynb     # Jupyter notebook for document upload
+│   └── sources/        # 100+ curated documents (PDF, DOCX, MD)
 └── README.md
 ```
 
@@ -213,6 +216,21 @@ for await (const chunk of responseStream) {
 }
 ```
 
+When `useRag: true`, the backend enables File Search tool:
+
+```typescript
+// Conditional File Search tool for RAG
+...(useRag && {
+  tools: [{
+    fileSearch: {
+      fileSearchStoreNames: [process.env.FILE_SEARCH_STORE_ID!],
+    }
+  }]
+})
+```
+
+Grounding sources are extracted from `groundingMetadata.groundingChunks` and sent as metadata events to the frontend.
+
 ## Environment Variables
 
 ### Backend (.env)
@@ -221,6 +239,7 @@ Create in `backend/.env`:
 API_KEY=your_google_gemini_api_key
 JWT_SECRET=your_jwt_secret_key
 APP_PASSWORD=bcrypt_hashed_password
+FILE_SEARCH_STORE_ID=your_file_search_store_id
 FRONTEND_URL=http://localhost:3000
 PORT=4101
 NODE_ENV=development
@@ -258,6 +277,8 @@ VITE_API_URL=http://localhost:4101/api
 - **History stored locally**: Only history persists in localStorage; auth is cookie-based
 - **CORS configured**: Backend only accepts requests from configured `FRONTEND_URL`
 - **Streaming API**: Analysis uses SSE for real-time response streaming
+- **RAG File Search**: When `useRag: true`, backend queries Google File Search Store with 100+ documents
+- **Grounding sources**: RAG queries return sources in `groundingMetadata.groundingChunks`
 
 ## Security Considerations
 
