@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HistoryItem, InputMode } from '../types';
+import { CloseIcon, ClockIcon, LinkIcon, FileIcon, FilesIcon, TrashIcon } from '../utils/icons';
 
 interface HistorySidebarProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
               onClick={onClose}
               className="text-gray-400 hover:text-[#BC5A41] transition-all p-1 hover:bg-white/30 rounded-full"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <CloseIcon />
             </button>
           </div>
 
@@ -50,7 +51,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {history.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 opacity-40">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mb-2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <ClockIcon />
                 <p className="text-center text-sm font-serif italic">Ni shranjenih zahtevkov.</p>
               </div>
             ) : (
@@ -83,13 +84,13 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
                               )}
                               {item.contents[0].type === InputMode.URL && (
                                 <span className="flex items-center gap-1">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                  <LinkIcon className="w-2.5 h-2.5" />
                                   {item.contents[0].content as string}
                                 </span>
                               )}
                               {item.contents[0].type === InputMode.FILE && (
                                 <span className="flex items-center gap-1">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                  <FileIcon />
                                   {item.fileNames?.[0]}
                                 </span>
                               )}
@@ -97,11 +98,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
                           ) : (
                             // Multiple contents - show summary
                             <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"></path>
-                                <path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"></path>
-                                <path d="M15 2v5h5"></path>
-                              </svg>
+                              <FilesIcon />
                               {item.contents.length} vira/viri
                             </span>
                           )}
@@ -118,7 +115,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
                      </div>
                   </button>
                   
-                  <button 
+                    <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(item.id);
@@ -126,7 +123,7 @@ const HistorySidebar: React.FC<HistorySidebarProps> = ({ isOpen, onClose, histor
                     className="absolute right-3 top-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50/50 rounded-lg"
                     title="Izbriši"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <TrashIcon />
                   </button>
                 </div>
               ))
