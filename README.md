@@ -186,10 +186,10 @@ npm run preview  # Preview production build
 | `PORT` | Server port (default: 4101) |
 | `NODE_ENV` | Environment mode (development/production) |
 
-### Frontend (.env.local)
+### Frontend (.env.production)
 | Variable | Description |
 |----------|-------------|
-| `VITE_API_URL` | Backend API URL (e.g., http://localhost:4101/api) |
+| `API_URL` | Backend API URL (e.g., http://localhost:4101/api) |
 
 
 ## License

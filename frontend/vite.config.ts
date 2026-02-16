@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/ai-fact-checker/',
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -17,6 +18,17 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+        }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'docx': ['html-docx-js-typescript'],
+              'marked': ['marked'],
+              'react-markdown': ['react-markdown'],
+            }
+          }
         }
       }
     };

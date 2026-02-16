@@ -47,6 +47,11 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 
 // --- ROUTES ---
 
+// Health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // 1. Login
 app.post('/api/login', async (req: Request, res: Response) => {
   const { password } = req.body;

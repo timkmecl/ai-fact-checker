@@ -19,6 +19,21 @@ npm run build     # Compile TypeScript to dist/
 npm start         # Run compiled JavaScript
 ```
 
+### Backend (Docker)
+```bash
+# Build and start
+docker-compose up -d
+
+# View logs
+docker-compose logs -f backend
+
+# Rebuild after changes
+docker-compose up -d --build
+
+# Stop
+docker-compose down
+```
+
 ### Frontend
 ```bash
 cd frontend
@@ -33,11 +48,16 @@ npm run preview   # Preview production build
 
 ```
 ai-fact-checker/
+├── .github/
+│   └── workflows/
+│       └── deploy-frontend.yml  # GitHub Actions for Pages deployment
 ├── backend/              # Express.js backend
 │   ├── src/
 │   │   ├── index.ts     # Main server: auth, Gemini proxy, SSE streaming, File Search RAG
 │   │   └── types.ts     # Shared types (ModelType enum)
 │   ├── .env            # Environment variables (API_KEY, JWT_SECRET, FILE_SEARCH_STORE_ID)
+│   ├── .dockerignore   # Docker ignore rules
+│   ├── Dockerfile      # Multi-stage Docker build
 │   └── package.json
 ├── frontend/            # React frontend
 │   ├── components/      # React components (PascalCase folders)
@@ -53,10 +73,13 @@ ai-fact-checker/
 │   │   └── geminiService.ts # Backend API calls with RAG support
 │   ├── constants/      # Static data
 │   ├── utils/          # Helper functions
-│   └── types.ts        # TypeScript types (GroundingSource, AnalysisRequest)
+│   ├── types.ts        # TypeScript types (GroundingSource, AnalysisRequest)
+│   └── vite.config.ts  # Vite config with manual chunks for code splitting
 ├── rag-setup/          # RAG knowledge base configuration
 │   ├── setup.ipynb     # Jupyter notebook for document upload
 │   └── sources/        # 100+ curated documents (PDF, DOCX, MD)
+├── docker-compose.yml  # Docker Compose configuration
+├── AGENTS.md           # This file
 └── README.md
 ```
 
@@ -248,7 +271,7 @@ NODE_ENV=development
 ### Frontend (.env.local)
 Create in `frontend/.env.local`:
 ```env
-VITE_API_URL=http://localhost:4101/api
+API_URL=http://localhost:4101/api
 ```
 
 **Note**: Frontend uses `VITE_` prefix for env vars. Backend uses `process.env` directly.
@@ -279,6 +302,26 @@ VITE_API_URL=http://localhost:4101/api
 - **Streaming API**: Analysis uses SSE for real-time response streaming
 - **RAG File Search**: When `useRag: true`, backend queries Google File Search Store with 100+ documents
 - **Grounding sources**: RAG queries return sources in `groundingMetadata.groundingChunks`
+
+## Frontend Build Optimization
+
+The Vite configuration includes manual chunking to split vendor libraries:
+
+```typescript
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'docx': ['html-docx-js-typescript'],
+        'marked': ['marked'],
+        'react-markdown': ['react-markdown'],
+      }
+    }
+  }
+}
+```
+
+This separates large dependencies into separate chunks, reducing the initial bundle size and improving page load performance.
 
 ## Security Considerations
 
