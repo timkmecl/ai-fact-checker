@@ -40,5 +40,5 @@ export interface HistoryItem {
 
 export interface GroundingSource {
   title: string;
-  uri: string;
+  text: string;
 }

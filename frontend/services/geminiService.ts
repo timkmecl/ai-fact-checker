@@ -68,7 +68,7 @@ export const streamAnalysis = async (
   systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
 
   if (useRag) {
-    systemContext += "Uporabi tudi širše iskanje po bazi znanja (RAG document search - baza različnih člankov, mnenj podpornikov, intervjujev in drugega utemeljevanja) prek File Search API orodja - za več informacij, ki bi pomagale pri odgovoru - predvsem se da tu najti informacije, ki ne sledijo neposredno iz besedila zakona, pa tudi druge. Vrnjene informacije niso vedno relevantne, uporabi samo, če so.\n\n"
+    systemContext += "Uporabi tudi širše iskanje po bazi znanja (use File Search tool for RAG document search - baza različnih člankov, mnenj podpornikov, intervjujev in drugega utemeljevanja) prek File Search API orodja - za več informacij, ki bi pomagale pri odgovoru - predvsem se da tu najti informacije, ki ne sledijo neposredno iz besedila zakona, pa tudi druge. Vrnjene informacije niso vedno relevantne, uporabi samo, če so.\n\n"
   }
 
 

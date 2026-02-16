@@ -66,7 +66,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
     console.log("User authenticated successfully");
     return res.json({ success: true });
   }
-  console.log("Failed login attempt with password:", password);
+  console.log("Failed login attempt with password.");
   res.status(401).json({ error: 'Wrong password' });
 });
 
@@ -100,7 +100,7 @@ app.post('/api/logout', (req: Request, res: Response) => {
 app.post('/api/analyze', authenticate, async (req: Request, res: Response) => {
   const { model, parts, useRag } = req.body;
 
-  console.log("Received analysis request", { model, useRag, partsLength: parts.length }); 
+  // console.log("Received analysis request", { model, useRag, partsLength: parts.length }); 
 
   // return res.json({ success: false, message: "Analysis endpoint is under construction. Check console for received data." });
 
@@ -112,7 +112,13 @@ app.post('/api/analyze', authenticate, async (req: Request, res: Response) => {
         temperature: 0.5,
         thinkingConfig: model === ModelType.GEMINI_3_FLASH ? { thinkingLevel: ThinkingLevel.LOW } : { thinkingBudget: 4096 },
         ...(useRag && {
-          tools: [{ googleSearch: {} }]
+          tools: [
+          {
+            fileSearch: {
+              fileSearchStoreNames: [process.env.FILE_SEARCH_STORE_ID!],
+            }
+          }
+      ]
         })
       }
     });
@@ -122,13 +128,16 @@ app.post('/api/analyze', authenticate, async (req: Request, res: Response) => {
     res.setHeader('Connection', 'keep-alive');
 
     for await (const chunk of responseStream) {
+      // console.log("Received chunk from Gemini:", chunk);
+      // console.log("Chunk metadata",  chunk.candidates?.[0]?.groundingMetadata);
+      // console.log("Chunk grounding chunks", chunk.candidates?.[0]?.groundingMetadata?.groundingChunks);
+
       const payload = {
         text: chunk.text,
         sources: chunk.candidates?.[0]?.groundingMetadata?.groundingChunks
-          ?.filter((c: any) => c.web)
-          .map((c: any) => ({ title: c.web.title, uri: c.web.uri })) || []
+          ?.filter((c: any) => c.retrievedContext)
+          .map((c: any) => ({ title: c.retrievedContext.title, text: c.retrievedContext.text })) || []
       };
-      // console.log("Sending chunk to client:", payload);
       res.write(`data: ${JSON.stringify(payload)}\n\n`);
     }
     res.end();

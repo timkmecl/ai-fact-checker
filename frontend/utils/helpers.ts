@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import { asBlob } from 'html-docx-js-typescript';
+import { GroundingSource } from '../types';
 
 // Helper to copy text to clipboard with fallback
 const copyToClipboard = async (text: string): Promise<void> => {
@@ -99,4 +100,34 @@ export const handleDownloadDocx = async (response: string) => {
     console.error("Failed to generate DOCX:", err);
     alert("Napaka pri generiranju Word dokumenta.");
   }
+};
+
+export const handleSourceClick = async (src: GroundingSource, idx: number) => {
+  const htmlContent = await marked.parse("... " + src.text + " ...");
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Vir ${idx + 1}: ${src.title}</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+      <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1 { font-family: 'Instrument Serif', serif; }
+      </style>
+    </head>
+    <body class="bg-[#F3F0E7] selection:bg-[#BC5A41]/20 p-8">
+      <div class="p-8 md:p-14 pt-6 md:pt-10 min-h-[400px] bg-white border border-[#D1D1D1] rounded-3xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+        <h1 class="text-3xl text-charcoal-800 mb-4">${src.title}</h1>
+        ${htmlContent}
+      </div>
+    </body>
+    </html>
+  `;
+  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  URL.revokeObjectURL(url);
 };
