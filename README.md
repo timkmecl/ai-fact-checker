@@ -3,6 +3,9 @@
 
 An AI-powered fact-checking application that helps verify information using Google's Gemini AI. The app analyzes text, URLs, and documents to provide fact-checking results with sources and explanations.
 
+![App Screenshot](.github/assets/example_screenshot.png)
+
+
 ## Features
 
 - **Multi-input Support**: Analyze text, URLs, and uploaded documents (PDF, text, etc.)
