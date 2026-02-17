@@ -17,6 +17,16 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
     }
   }, [response, isStreaming]);
 
+  const cleanResponse = (text: string): string => {
+    return text
+      // 1. Remove [kontekst], [context], [cite: Context], [General information], etc.
+      // This regex looks for optional "cite: " followed by the blacklisted words
+      .replace(/ \[(?:cite:\s*)?(kontekst|context|general information|splošne informacije|general|splošno|podatki za analizo|general info|info|informacije)\]/gi, '')
+      
+      // 2. Replace [cite: X] with [X]
+      .replace(/\[cite:\s*(.*?)\]/gi, '[$1]')
+  };
+
   const handleSubmit = async (
     instruction: string,
     contents: ContentInput[],
@@ -41,17 +51,19 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
     setSources([]);
     sourcesRef.current = [];
 
-    let fullResponse = "";
+    let rawResponse = "";
     try {
       await streamAnalysis({
         instruction, contents, model, useRag
       }, (chunk) => {
-        fullResponse += chunk;
-        setResponse((prev) => prev + chunk);
+        rawResponse += chunk;
+        setResponse(cleanResponse(rawResponse));
       }, (metadata) => {
         setSources(metadata);
         sourcesRef.current = metadata;
       });
+
+      const finalCleanedResponse = cleanResponse(rawResponse);
 
       const newItem: HistoryItem = {
         id: Date.now().toString(),
@@ -62,7 +74,7 @@ export const useStreaming = (addToHistory: (item: HistoryItem) => void) => {
           .filter(c => c.type === InputMode.FILE && c.content instanceof File)
           .map(c => (c.content as File).name),
         model,
-        response: fullResponse,
+        response: finalCleanedResponse,
         sources: sourcesRef.current.length > 0 ? sourcesRef.current : undefined,
         useRag
       };

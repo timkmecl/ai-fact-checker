@@ -61,6 +61,12 @@ const AnalysisForm: React.FC<AnalysisFormProps> = ({
         content: c.content,
       })));
     }
+    // If contents are cleared externally, reset inputs to one empty text input
+    if (contents.length === 1 && contents[0].type === InputMode.TEXT && contents[0].content === '') {
+      if (inputs.length !== 1 || inputs[0].type !== InputMode.TEXT || inputs[0].content !== '') {
+        setInputs([{ id: `input-0-${Date.now()}`, type: InputMode.TEXT, content: '' }]);
+      }
+    }
   }, [contents]);
 
   const addInput = () => {

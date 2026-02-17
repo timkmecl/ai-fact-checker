@@ -64,11 +64,17 @@ export const streamAnalysis = async (
   let parts: any = [];
 
   let systemContext = "Si AI Fact Checker. Tvoj cilj je na osnovi podanega gradiva za analizo (besedilo, datoteke) in uporabnikovega navodila ter morebitnega dodatnega gradiva pomagati uporabniku (iz kampanje podpornikov zakona) pri zadani nalogi (ki je lahko širša kot zgolj fact-checking). V odgovoru uporabi markdown oblikovanje, smiselno uporabljaj naslove (#), podnaslove (##) (po potrebi podpodnaslove...) in bodi jedrnat, a vseeno dovolj informativen - razen če uporabnik zahteva drugače. Ne izpisuj markdown tabel - BREZ TABEL. V tvojem odgovoru naj bo, kar zahteva uporabnik, pri čemer naj bo kakovost odgovora taka, da bo z minimalno recenzijo primeren za objavo.\n\n";
-  systemContext += `Nekaj informacij o evtanaziji in zakonu za pomoč pri pisanju odgovora (no need to quote literally, you can paraphrase and use just what you need. And don't cite this explicitly as a source - THIS IS IMPORTANT! : when using info from here, NEVER say "Splošne informacije navajajo XYZ" or "XYZ [Splošne informacije]" or "XYZ [anything]" - don't do this, but rather just say "XYZ" without [...], paraphrase XYZ or optionally cite the relevant part of the law): \n\n${ZPPKZ_INFO_TEXT}\n\n`
-  systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev:\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
+
+  const ragPrompt = "Uporabi tudi širše iskanje po bazi znanja (use File Search tool (google:file_search) for RAG document search - baza različnih člankov, mnenj podpornikov, intervjujev in drugega utemeljevanja) prek File Search API orodja - za več informacij, ki bi pomagale pri odgovoru - predvsem se da tu najti informacije, ki ne sledijo neposredno iz besedila zakona, pa tudi druge. Vrnjene informacije niso vedno relevantne. Nekatere tudi navajajo mnenja nasprotnikov, ki niso resnična. Bodi pozoren, kaj uporabiš. Ni pa se treba omejiti le na vire, ki jih imaš, sploh za trditve, ki niso povezane neposredno s proceduro zakona, uporabi tudi prost razmislek. \n\n"
+  if (useRag) {
+    systemContext += ragPrompt;
+  }
+
+  systemContext += `Nekaj informacij o evtanaziji in zakonu za pomoč pri pisanju odgovora (splošne informacije, no need to quote literally, you can paraphrase and use just what you need - THIS IS IMPORTANT! : when using info from here, NEVER say "Splošne informacije navajajo XYZ" or "XYZ (Splošne informacije)" - don't do this, but rather just say "XYZ", paraphrase XYZ or optionally cite the relevant part of the law): \n\n### Splošne informacije\n${ZPPKZ_INFO_TEXT}\n\n`
+  systemContext += `Uporabi naslednje besedilo zakona (ZPPKŽ) kot glavno referenco za preverjanje dejstev (vedno pa lahko uporabiš tudi lasten premislek, tudi glede ostalih virov - sploh ko gre za bolj filozofske trditve, razmisli in odgovori, ni se treba opirati dobesedno na podane vire):\n\n${ZPPKZ_LAW_TEXT}\n\n---\n\n`;
 
   if (useRag) {
-    systemContext += "Uporabi tudi širše iskanje po bazi znanja (use File Search tool for RAG document search - baza različnih člankov, mnenj podpornikov, intervjujev in drugega utemeljevanja) prek File Search API orodja - za več informacij, ki bi pomagale pri odgovoru - predvsem se da tu najti informacije, ki ne sledijo neposredno iz besedila zakona, pa tudi druge. Vrnjene informacije niso vedno relevantne, uporabi samo, če so. Nekatere tudi navajajo mnenja nasprotnikov, ki niso resnična. Bodi pozoren, kaj uporabiš.\n\n"
+    systemContext += ragPrompt;
   }
 
 
@@ -161,6 +167,7 @@ export const streamAnalysis = async (
             
             if (data.sources && data.sources.length > 0 && onMetadata) {
               onMetadata(data.sources);
+              console.log("Received sources metadata:", data.sources);
             }
           } catch (e) {
             console.error("Error parsing stream chunk", e);
